@@ -18,7 +18,6 @@ void loop(void)
 {
 	// o—Í‚Å‚«‚é‚©‚·
 	bool v = a_comp::read();
-	PTB.b3 = v;
 	PORTD = (PORTD & ~(1<<PD0)) | v;
 }
 

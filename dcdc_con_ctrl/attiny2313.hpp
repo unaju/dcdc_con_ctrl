@@ -23,10 +23,18 @@
 	
 // よく使う型
 typedef	unsigned char	uchar;
-struct port { union { bool b0:1, b2:1, b3:1, b4:1, b5:1, b6:1, b7:1; uchar B; }; };
-#define	PTB	((port&)(PORTB))
 	
-	
+// ポートにset/get
+template<int number>
+void	setB(bool bit) { PORTB = (PORTB & ~(1<<number)) | (bit << number); }
+template<int number>
+void	setD(bool bit) { PORTD = (PORTD & ~(1<<number)) | (bit << number); }
+template<int number>
+bool	getB(void) { return bit_is_set(PORTB,number); }
+template<int number>
+bool	getD(void) { return bit_is_set(PORTD,number); }
+
+
 // PWM管理
 // 周期はOCRnx(n∈{A,B},x∈{0,1})で設定
 // n=0は8bitで二重バッファ
@@ -116,7 +124,7 @@ namespace a_comp
 	}
 
 	// 結果を読む. AIN1 < (AIN0|Vref) で比較.
-	bool	read(void) { return (ACSR & (1<<ACO)) != 0; }
+	bool	read(void) { return bit_is_set(ACSR,ACO); }
 };
 
 
