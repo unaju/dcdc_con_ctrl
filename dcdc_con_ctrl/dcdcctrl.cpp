@@ -39,7 +39,7 @@ int	main(void)
 	OCR0A = 200;
 
 	// コンパレータ設定
-	a_comp::enable<0, 0, 0, 1, a_comp::int_raise>();
+	a_comp::enable<0, 0, 0, 0, a_comp::int_tgl>();
 
 	// ループ部分
 	for(;;) loop();

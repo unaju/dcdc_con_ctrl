@@ -108,7 +108,6 @@ namespace a_comp
 
 		// コンパレータの設定
 		ACSR = 
-			(1 << ACD) | // 有効化
 			(comp_Vref << ACBG) |
 			(interrupt_flag << ACI) |
 			(interrupt_enable << ACIE) |
