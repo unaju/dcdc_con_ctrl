@@ -2,7 +2,13 @@
 #include "attiny2313.hpp"
 #include "alg.hpp"
 
-/*	ポート設定は
+/*	設定について
+	
+	CPUは8MHz内部発振
+	ヒューズビットは
+	-U lfuse:w:0xe4:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
+
+	ポート設定は
 	PWM出力:PB2(OC0A)
 	コンパレータのVref:PB0(AIN0), V-:PB1(AIN1)
 */

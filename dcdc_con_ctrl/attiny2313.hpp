@@ -101,6 +101,12 @@ namespace a_comp
 		ACmpIntMD acimd // 割り込みのタイミング
 	>
 	void	enable(void) {
+		// ピンをinputにして出力を0に
+		static const int outpin = (1<<PB1) | (comp_Vref ? 0 : (1<<PB0));
+		DDRB &= ~outpin; // inputに
+		PORTB &= ~outpin; // portは0にしておかないと確実にHighZにならない
+
+		// コンパレータの設定
 		ACSR = 
 			(1 << ACD) | // 有効化
 			(comp_Vref << ACBG) |
