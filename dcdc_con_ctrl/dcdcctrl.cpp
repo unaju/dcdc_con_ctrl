@@ -8,19 +8,10 @@
 */
 
 
-// PWM設定
-namespace conf
+void loop(void)
 {
-	using namespace pwm;
-	typedef tccr_generator<
-		pwmout_noninv, pwmout_none,
-		wgm_highspeed, ps_1
-	>	pwmconf;
-
-
-};
-
-
+	PTB.b3 = a_comp::read();
+}
 
 int	main(void)
 {
@@ -31,11 +22,18 @@ int	main(void)
 	// タイマー割り込み無し
 	pwm::disable_timer_interrupt();
 
-	// pwm設定
-	pwm::init0<conf::pwmconf>();
-	PTB.b3 = 1;
-	for(;;){
-	}
+	// PWM設定
+	pwm::init0< pwm::tccr_generator<
+		pwm::pwmout_noninv, pwm::pwmout_none,
+		pwm::wgm_highspeed, pwm::ps_1
+	> >();
+	OCR0A = 200;
+
+	// コンパレータ設定
+	a_comp::enable<0, 0, 0, 1, a_comp::int_raise>();
+
+	// ループ部分
+	for(;;) loop();
 
 	return 0;
 }

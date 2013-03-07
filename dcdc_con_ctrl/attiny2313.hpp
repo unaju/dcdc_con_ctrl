@@ -82,7 +82,8 @@ namespace	pwm
 };
 
 
-// アナログコンパレータ. (AIN0|基準電源)<=>AIN1
+// アナログコンパレータ. V+<=>V- = (AIN0|Vref)<=>AIN1.
+// Vrefは内部基準電圧1.1V. 安定まで40us.
 namespace a_comp
 {
 	// コンパレータ無効化
@@ -93,13 +94,13 @@ namespace a_comp
 
 	// コンパレータ有効化
 	template<
-		bool comp_Vref, // 1で内部基準電圧1.1V,0でAIN0と比較. 内部基準電圧は安定まで40us.
+		bool comp_Vref, // 1でVref, 0でAIN0をV+に入力
 		bool interrupt_flag, // 割り込み要求
 		bool interrupt_enable, // 割り込み許可
 		bool cap, // capture
 		ACmpIntMD acimd // 割り込みのタイミング
 	>
-	void	init(void) {
+	void	enable(void) {
 		ACSR = 
 			(1 << ACD) | // 有効化
 			(comp_Vref << ACBG) |
@@ -108,6 +109,9 @@ namespace a_comp
 			(cap << ACIC) |
 			(acimd << ACIS0);
 	}
+
+	// 結果を読む. AIN1 < (AIN0|Vref) で比較.
+	bool	read(void) { return (ACSR & (1<<ACO)) != 0; }
 };
 
 
