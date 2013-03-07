@@ -16,7 +16,15 @@
 
 void loop(void)
 {
-	setD<0>( a_comp::read() );
+	// 64回 電圧を比較して平滑化
+	int v = 0;
+	for(int i = 0; i < 64; ++i) {
+		// 基準電圧の方が電圧が高いなら+1, 低いなら-1
+		v += a_comp::read() ? +1 : -1;
+	}
+	// 新しいPWM出力値を設定
+	v = OCR0A + ((v < 0) ? -1 : 1);
+	OCR0A = (v < 0) ? 0 : (v > 255) ? 255 : v;
 }
 
 int	main(void)
@@ -33,7 +41,6 @@ int	main(void)
 		pwm::pwmout_noninv, pwm::pwmout_none,
 		pwm::wgm_highspeed, pwm::ps_1
 	> >();
-	OCR0A = 200;
 
 	// コンパレータ設定
 	a_comp::enable<0, 0, 0, 0, a_comp::int_tgl>();
