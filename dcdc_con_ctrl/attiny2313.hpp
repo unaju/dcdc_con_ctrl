@@ -26,25 +26,68 @@ typedef	unsigned char	uchar;
 	
 	
 // PWM管理
-// OCRnx(n∈{A,B},x∈{0,1})で設定
+// 周期はOCRnx(n∈{A,B},x∈{0,1})で設定
 // n=0は8bitで二重バッファ
-
+// initで初期化. 引数の型のTCCRで設定数値
 namespace	pwm
 {
-	// 分周期設定
-	// F_CPU/(1:1, 2:8, 3:64, 4:256, 5:1024)でカウントアップ.
-	enum Presc { ps_1 = 1, ps_8, ps_64, ps_256, ps_1024 };
+	// クロック設定. ps_(数値)は()内の数値で分周.
+	enum PwmClock {
+		ck_stop = 0, // stop
+		ps_1, ps_8, ps_64, ps_256, ps_1024, // F_CPU/X. Xはps_の後の数値
+		ck_fall, ck_raise // 外部クロック(T0)の下降/上昇端
+	};
 
 	// 出力形式. それぞれ 無し, トグル, 非反転, 反転
 	enum PwmOut { pwmout_none = 0, pwmout_toggle, pwmout_noninv, pwmout_inv };
 
+	// Waveform Generation Model.
+	// 0:default, 1:phase(8bit), 2:CTC, 3:HighSpeedPWM(8bit), 5:phase, 7:HighSpeedPWM
+	enum	WGM
+	{
+		wgm_default = 0,
+		wgm_phase_8bit, 
+		wgm_CTC,		// d=0.5で一定, 周期可変. 割り込み可.
+		wgm_highspeed,	// 8bit高速PWM
+		wgm_phase,
+		wgm_pwm
+	};
+	
+	// TCCRnA,TCCRnBを生成
+	template<PwmOut outA, PwmOut outB, WGM wgm, PwmClock ck>
+	struct tccr_generator
+	{
+		enum {
+			valueA =
+				((outA & 0x3) << COM0A0) |
+				((outB & 0x3) << COM0B0) |
+				((wgm & 0x3) << WGM00),
+			valueB = 
+				((wgm & 0x4) << WGM02) |
+				((ck & 0x7) << CS00)
+		};
+	};
+
+	// 初期化
+	template<class tccr_gen>
+	void	init0 (void) { TCCR0A = tccr_gen::valueA; TCCR0B = tccr_gen::valueB; }
+	template<class tccr_gen>
+	void	init1 (void) { TCCR1A = tccr_gen::valueA; TCCR1B = tccr_gen::valueB; }
+
+
 	// TOP=255の高速PWM
+	template<PwmClock ck, PwmOut po>
 	struct pwm_highspeed
 	{
 		enum {
-			wgm = 3 // TOP=255の高速PWMのため
+			wgm = 3, // TOP=255の高速PWMのため
+
 		};
 	};
+
+	// タイマーカウント割り込みを禁止
+	void	disable_timer_interrupt(void) { TIMSK = 0; }
+
 
 // 古いの
 #if 0
