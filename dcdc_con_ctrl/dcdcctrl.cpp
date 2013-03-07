@@ -16,9 +16,7 @@
 
 void loop(void)
 {
-	// o—Í‚Å‚«‚é‚©‚·
-	bool v = a_comp::read();
-	PORTD = (PORTD & ~(1<<PD0)) | v;
+	setD<0>( a_comp::read() );
 }
 
 int	main(void)
