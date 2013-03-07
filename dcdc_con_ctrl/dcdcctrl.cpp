@@ -2,14 +2,19 @@
 #include "attiny2313.hpp"
 #include "alg.hpp"
 
+/*	ポート設定は
+	PWM出力:PB2(OC0A)
+	コンパレータのVref:PB0(AIN0), V-:PB1(AIN1)
+*/
+
 
 // PWM設定
 namespace conf
 {
 	using namespace pwm;
 	typedef tccr_generator<
-		pwmout_noninv, pwmout_inv,
-		wgm_highspeed, ps_256
+		pwmout_noninv, pwmout_none,
+		wgm_highspeed, ps_1
 	>	pwmconf;
 
 
@@ -28,7 +33,7 @@ int	main(void)
 
 	// pwm設定
 	pwm::init0<conf::pwmconf>();
-
+	PTB.b3 = 1;
 	for(;;){
 	}
 

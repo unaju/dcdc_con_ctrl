@@ -23,6 +23,8 @@
 	
 // よく使う型
 typedef	unsigned char	uchar;
+struct port { union { bool b0:1, b2:1, b3:1, b4:1, b5:1, b6:1, b7:1; uchar B; }; };
+#define	PTB	((port&)(PORTB))
 	
 	
 // PWM管理
@@ -77,60 +79,37 @@ namespace	pwm
 	// タイマーカウント割り込みを禁止
 	void	disable_timer_interrupt(void) { TIMSK = 0; }
 
+};
 
-// 古いの
-#if 0
 
-// Waveform Generation Model.
-// 0:default, 1:phase(8bit), 2:CTC, 3:HighSpeedPWM(8bit), 5:phase, 7:HighSpeedPWM
-enum	WGM
+// アナログコンパレータ. (AIN0|基準電源)<=>AIN1
+namespace a_comp
 {
-	wgm_default = 0,	// 0-255まで増加. パルス長可変.
-	wgm_phase_8bit = 1, 
-	wgm_CTC = 2,		// d=0.5で一定, 周期可変. 割り込み可.
-	wgm_pwm_8bit = 3,
-	wgm_phase = 5,
-	wgm_pwm = 7
-};
-	
+	// コンパレータ無効化
+	void	disable(void) { ACSR = 1 << ACD; }
 
-// PWM出力形式設定
-enum PwmOut
-{
-	pwmout_none = 0,
-	pwmout_toggle,
-	pwmout_h2l, // High to Low
-	pwmout_l2h // Low to High
-};
-/*
-	valueA,BをTCCRnA,Bに入れる
-	out_type_a, _bはA,Bの出力設定(A,Bはxとする)
-	nxとピンの対応は	0A:PB6, 0B:PD5, 1A:PB1, 1B:PB2, 2A:PB3, 2B:PD3
-	デューティ比はOCRxnに0-255で設定する.
-*/
-template <
-	PwmOut outA, PwmOut outB,
-	WGM wgm, // 0:default, 1:phase(8bit), 2:CTC, 3:HighSpeedPWM(8bit), 5:phase, 7:HighSpeedPWM
-	CkSep cs,
-	int foc = 0 // 後で実装
-> struct	pwm_setting
-{
-	// 設定する値. コンパイル時定数。
-	static const int8_t
-		valueA =
-			((outA & 0x3) << COM0A0) |
-			((outB & 0x3) << COM0B0) |
-			((wgm & 0x3) << WGM00),
-		valueB = 
-			((foc & 0x3) << FOC0B) |
-			((wgm & 0x4) << WGM02) |
-			((cs & 0x7) << CS00);
+	// 割り込み条件
+	enum ACmpIntMD { int_tgl = 0, int_fall = 2, int_raise = 3 };
 
-	// portのDDRでの出力設定はしないため先にしておく必要アリ. initしたとこからPWM.
-	static void	init0() { TCCR0A = valueA; TCCR0B = valueB; }
-	//static void	init1() { TCCR1A = valueA; TCCR1B = valueB; }
-	//static void	init2() { TCCR2A = valueA; TCCR2B = valueB; }
+	// コンパレータ有効化
+	template<
+		bool comp_Vref, // 1で内部基準電圧1.1V,0でAIN0と比較. 内部基準電圧は安定まで40us.
+		bool interrupt_flag, // 割り込み要求
+		bool interrupt_enable, // 割り込み許可
+		bool cap, // capture
+		ACmpIntMD acimd // 割り込みのタイミング
+	>
+	void	init(void) {
+		ACSR = 
+			(1 << ACD) | // 有効化
+			(comp_Vref << ACBG) |
+			(interrupt_flag << ACI) |
+			(interrupt_enable << ACIE) |
+			(cap << ACIC) |
+			(acimd << ACIS0);
+	}
 };
-#endif
 
-};
+
+
+
