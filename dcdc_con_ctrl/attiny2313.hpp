@@ -74,17 +74,6 @@ namespace	pwm
 	template<class tccr_gen>
 	void	init1 (void) { TCCR1A = tccr_gen::valueA; TCCR1B = tccr_gen::valueB; }
 
-
-	// TOP=255の高速PWM
-	template<PwmClock ck, PwmOut po>
-	struct pwm_highspeed
-	{
-		enum {
-			wgm = 3, // TOP=255の高速PWMのため
-
-		};
-	};
-
 	// タイマーカウント割り込みを禁止
 	void	disable_timer_interrupt(void) { TIMSK = 0; }
 
