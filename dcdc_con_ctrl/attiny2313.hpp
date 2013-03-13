@@ -81,39 +81,10 @@ namespace	pwm
 		};
 	};
 
-	/*	出力ポートクラス. マクロで特殊化クラスを生成してtemplateでアクセスできるようにする.
-		OCR0AとOCR1Aは型が違いdecltypeが必要なので今のコンパイラ(WinAVR 2010)では楽に実装できない
-	*/
-	template<int port_n> struct port
-	{
-		// インターフェイスとして関数は作っておく
-		template<class tccr> static void set_tccr(void);
-	};
-	
-#define	DEFINE_PWM_PORT_CLASS(N)	\
-	template<> struct port<N>	\
-	{\
-		template<class tccr> static void set_tccr(void)	\
-		{ TCCR##N##A = tccr::valueA; TCCR##N##B = tccr::valueB; }	\
-		\
-	};\
-	
-	DEFINE_PWM_PORT_CLASS(0)
-	DEFINE_PWM_PORT_CLASS(1)
 
 
-	// Top=0xFFの高速PWM出力を開始する簡易ラッパというか使用例. OCRnAでデューティ設定.
-	// classでないとenumをtemplateに取れないのでクラス内にstaticで宣言
-	// ポート番号をとってクラス内でポートクラスを設定するとコンパイルできない模様
-	template<PwmOut outA, PwmOut outB, PwmClock ck, int port_n>
-	struct	start_highspeed
-	{
-		typedef tccr_generator<outA,outB,wgm_highspeed,ck> tccr_t;
-		static void init(void) { port<port_n>::set_tccr<tccr_t>(); }
-	};
 
-
-	// 初期化
+	// 初期化. クラスでの特殊化はメリットがあまりない
 	template<class tccr_gen>
 	void	init0 (void) { TCCR0A = tccr_gen::valueA; TCCR0B = tccr_gen::valueB; }
 	template<class tccr_gen>
