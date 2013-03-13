@@ -30,3 +30,5 @@ _ReSharper*/
 $tf*/
 *.d
 *.hex
+*.net
+*.fft

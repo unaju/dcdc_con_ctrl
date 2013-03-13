@@ -41,7 +41,6 @@ void loop(void)
 	OCR0A = (v < 0) ? 0 : (v > 255) ? 255 : v;
 
 #else
-	pwm_t::setVal(40);
 #endif // LOW_SPEED_PWM
 }
 
@@ -61,6 +60,7 @@ int	main(void)
 #else
 	pwm_t::init();
 	pwm_t::setMax(64);
+	pwm_t::setVal(40);
 #endif // LOW_SPEED_PWM
 
 	// コンパレータ設定
