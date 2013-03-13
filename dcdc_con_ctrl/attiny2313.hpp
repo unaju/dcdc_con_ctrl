@@ -76,7 +76,7 @@ namespace	pwm
 				((outB & 0x3) << COM0B0) |
 				((wgm & 0x3) << WGM00),
 			valueB = 
-				( ((wgm >> 2) & 0x1)  << WGM02) ) | // 3bit–Ú’Šo
+				( ((wgm >> 2) & 0x1) << WGM02 ) | // 3bit–Ú’Šo
 				((ck & 0x7) << CS00)
 		};
 	};
