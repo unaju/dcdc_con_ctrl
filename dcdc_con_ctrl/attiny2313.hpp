@@ -23,6 +23,8 @@
 	
 // よく使う型
 typedef	unsigned char	uchar;
+typedef	volatile uint8_t	vui8t; // OCRとかの型
+	
 	
 // ポートにset/get
 template<int number>
@@ -38,7 +40,9 @@ bool	getD(void) { return bit_is_set(PORTD,number); }
 // PWM管理
 // 周期はOCRnx(n∈{A,B},x∈{0,1})で設定
 // n=0は8bitで二重バッファ
-// initで初期化. 引数の型のTCCRで設定数値
+// initで初期化
+// 周期・デューティは出力はOCRnxのxでのみ独立	？
+// そのため出力A,Bでは反転か非反転かくらいしか変えられない	？
 namespace	pwm
 {
 	// クロック設定. ps_(数値)は()内の数値で分周.
@@ -52,15 +56,14 @@ namespace	pwm
 	enum PwmOut { pwmout_none = 0, pwmout_toggle, pwmout_noninv, pwmout_inv };
 
 	// Waveform Generation Model.
-	// 0:default, 1:phase(8bit), 2:CTC, 3:HighSpeedPWM(8bit), 5:phase, 7:HighSpeedPWM
 	enum	WGM
 	{
 		wgm_default = 0,
 		wgm_phase_8bit, 
 		wgm_CTC,		// d=0.5で一定, 周期可変. 割り込み可.
-		wgm_highspeed,	// 8bit高速PWM
-		wgm_phase,
-		wgm_pwm
+		wgm_highspeed,	// 8bit高速PWM. TOP=0xFF固定.
+		wgm_phase = 5,
+		wgm_fullspeed = 7, // TOP=OCR0Aの高速PWM.
 	};
 	
 	// TCCRnA,TCCRnBを生成
@@ -78,6 +81,38 @@ namespace	pwm
 		};
 	};
 
+	/*	出力ポートクラス. マクロで特殊化クラスを生成してtemplateでアクセスできるようにする.
+		OCR0AとOCR1Aは型が違いdecltypeが必要なので今のコンパイラ(WinAVR 2010)では楽に実装できない
+	*/
+	template<int port_n> struct port
+	{
+		// インターフェイスとして関数は作っておく
+		template<class tccr> static void set_tccr(void);
+	};
+	
+#define	DEFINE_PWM_PORT_CLASS(N)	\
+	template<> struct port<N>	\
+	{\
+		template<class tccr> static void set_tccr(void)	\
+		{ TCCR##N##A = tccr::valueA; TCCR##N##B = tccr::valueB; }	\
+		\
+	};\
+	
+	DEFINE_PWM_PORT_CLASS(0)
+	DEFINE_PWM_PORT_CLASS(1)
+
+
+	// Top=0xFFの高速PWM出力を開始する簡易ラッパというか使用例. OCRnAでデューティ設定.
+	// classでないとenumをtemplateに取れないのでクラス内にstaticで宣言
+	// ポート番号をとってクラス内でポートクラスを設定するとコンパイルできない模様
+	template<PwmOut outA, PwmOut outB, PwmClock ck, int port_n>
+	struct	start_highspeed
+	{
+		typedef tccr_generator<outA,outB,wgm_highspeed,ck> tccr_t;
+		static void init(void) { port<port_n>::set_tccr<tccr_t>(); }
+	};
+
+
 	// 初期化
 	template<class tccr_gen>
 	void	init0 (void) { TCCR0A = tccr_gen::valueA; TCCR0B = tccr_gen::valueB; }
@@ -88,8 +123,8 @@ namespace	pwm
 	void	disable_timer_interrupt(void) { TIMSK = 0; }
 
 };
-
-
+	
+	
 // アナログコンパレータ. V+<=>V- = (AIN0|Vref)<=>AIN1.
 // Vrefは内部基準電圧1.1V. 安定まで40us.
 namespace a_comp
