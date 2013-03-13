@@ -18,7 +18,6 @@ Thumbs.db
 *.ilk
 *.log
 *.old
-*.hex
 [Bb]in
 [Dd]ebug*/
 *.lib
@@ -29,4 +28,5 @@ _ReSharper*/
 [Tt]est[Rr]esult*
 *.vssscc
 $tf*/
+*.d
 *.hex
