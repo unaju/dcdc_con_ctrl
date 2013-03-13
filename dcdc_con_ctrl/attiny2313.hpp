@@ -63,7 +63,7 @@ namespace	pwm
 		wgm_CTC,		// d=0.5で一定, 周期可変. 割り込み可.
 		wgm_highspeed,	// 8bit高速PWM. TOP=0xFF固定.
 		wgm_phase = 5,
-		wgm_fullspeed = 7, // TOP=OCR0Aの高速PWM.
+		wgm_fast = 7, // TOP=OCR0Aの高速PWM. 最速.
 	};
 	
 	// TCCRnA,TCCRnBを生成
@@ -76,15 +76,12 @@ namespace	pwm
 				((outB & 0x3) << COM0B0) |
 				((wgm & 0x3) << WGM00),
 			valueB = 
-				((wgm & 0x4) << WGM02) |
+				( ((wgm >> 2) & 0x1)  << WGM02) ) | // 3bit目抽出
 				((ck & 0x7) << CS00)
 		};
 	};
 
-
-
-
-	// 初期化. クラスでの特殊化はメリットがあまりない
+	// 初期化. クラスでの特殊化はメリットがあまりなかった.
 	template<class tccr_gen>
 	void	init0 (void) { TCCR0A = tccr_gen::valueA; TCCR0B = tccr_gen::valueB; }
 	template<class tccr_gen>
@@ -93,6 +90,25 @@ namespace	pwm
 	// タイマーカウント割り込みを禁止
 	void	disable_timer_interrupt(void) { TIMSK = 0; }
 
+	/*	8bit,周波数/デューティ可変のPWMを扱う. 出力ポートはOC0Bのみ.
+		カウントが0～OCR0Aまでのため,トリガはOCR0Bでしか変更できない(=BにしかPWM出力できない)
+		そのためOC0Aはnoneに設定.
+		気の利いた名前は思いつかなかった. fullspeedってのもなんか長いし.
+	*/
+	template<PwmOut outB, PwmClock ck>
+	struct fastpwm_8bit
+	{
+		typedef tccr_generator<pwmout_none, outB, wgm_fast, ck>	tccr_t;
+		static void init(void) { init0<tccr_t>(); }
+
+		// カウント最大値(OCR0A)を設定. PWM周波数は (AVR周波数/分周)/(OCR0A)になる.
+		static void setMax(uint8_t max_v) { OCR0A = max_v; }
+		// 波形折り返し点(OCR0B)を設定
+		static void setVal(uint8_t val) { OCR0B = val; }
+		// 0 <= val <= OCR0A までの数値にvalを区切ってから設定
+		static void setVal(int val) { OCR0B = (val < 0) ? 0 : (val > OCR0A) ? OCR0A : val; }
+	};
+	
 };
 	
 	

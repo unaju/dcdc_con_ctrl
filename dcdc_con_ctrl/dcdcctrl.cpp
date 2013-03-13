@@ -13,9 +13,23 @@
 	コンパレータのVref:PB0(AIN0), V-:PB1(AIN1)
 */
 
+// 遅いPWM(0-255までカウント)のモードを使うか
+#define	LOW_SPEED_PWM	0
 
+// 型とかの設定
+#if LOW_SPEED_PWM
+typedef	pwm::tccr_generator<
+	pwm::pwmout_noninv, pwm::pwmout_none,
+	pwm::wgm_highspeed, pwm::ps_1
+>	tccr_t;
+#else
+typedef	pwm::fastpwm_8bit<pwm::pwmout_noninv, pwm::ps_1>	pwm_t;
+#endif // LOW_SPEED_PWM
+
+// ループする部分
 void loop(void)
 {
+#if LOW_SPEED_PWM
 	// 64回 電圧を比較して平滑化
 	int v = 0;
 	for(int i = 0; i < 64; ++i) {
@@ -25,8 +39,13 @@ void loop(void)
 	// 新しいPWM出力値を設定
 	v = OCR0A + ((v < 0) ? -1 : 1);
 	OCR0A = (v < 0) ? 0 : (v > 255) ? 255 : v;
+
+#else
+	pwm_t::setVal(40);
+#endif // LOW_SPEED_PWM
 }
 
+// 初期化部分
 int	main(void)
 {
 	// 入出力設定. D,BはOut
@@ -37,10 +56,12 @@ int	main(void)
 	pwm::disable_timer_interrupt();
 
 	// PWM設定
-	pwm::init0< pwm::tccr_generator<
-		pwm::pwmout_noninv, pwm::pwmout_none,
-		pwm::wgm_highspeed, pwm::ps_1
-	> >();
+#if LOW_SPEED_PWM
+	pwm::init0<tccr_t>();
+#else
+	pwm_t::init();
+	pwm_t::setMax(64);
+#endif // LOW_SPEED_PWM
 
 	// コンパレータ設定
 	a_comp::enable<0, 0, 0, 0, a_comp::int_tgl>();
