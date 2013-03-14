@@ -107,6 +107,8 @@ namespace	pwm
 		static void setVal(uint8_t val) { OCR0B = val; }
 		// 0 <= val <= OCR0A までの数値にvalを区切ってから設定
 		static void setVal(int val) { OCR0B = (val < 0) ? 0 : (val > OCR0A) ? OCR0A : val; }
+		// 折り返し点(OCR0B)を取得. 単なるラップ. 最適化されるため直接OCR0Bを参照するのと同じhexになる.
+		static vui8t& value(void) { return OCR0B; }
 	};
 	
 };
