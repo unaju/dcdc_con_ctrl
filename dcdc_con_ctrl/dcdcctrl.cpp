@@ -60,7 +60,7 @@ int	main(void)
 #else
 	pwm_t::init();
 	pwm_t::setMax(64);
-	pwm_t::setVal(40);
+	pwm_t::setVal(63);
 #endif // LOW_SPEED_PWM
 
 	// コンパレータ設定
