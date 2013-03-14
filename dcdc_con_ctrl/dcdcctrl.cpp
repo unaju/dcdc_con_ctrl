@@ -46,8 +46,7 @@ void loop(void)
 	for(int i = 0; i < 64; ++i)
 		v += a_comp::read() ? +1 : -1; // Vref>Vinで+1,違えば-1
 	// 周期更新
-	if(alg::abs(v) > 8) // 有意差がある場合のみデューティ変更
-		pwm_t::setVal( pwm_t::value() + ((v<0) ? -1 : +1) );
+	pwm_t::setVal( pwm_t::value() + ((v<0) ? -1 : +1) );
 
 
 #endif // LOW_SPEED_PWM
