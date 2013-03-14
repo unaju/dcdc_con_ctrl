@@ -41,6 +41,15 @@ void loop(void)
 	OCR0A = (v < 0) ? 0 : (v > 255) ? 255 : v;
 
 #else
+	// 基準電圧との上下を数回比べて平滑化(n回平均). 遅延をもたせる役割もあり.
+	int v = 0;
+	for(int i = 0; i < 64; ++i)
+		v += a_comp::read() ? +1 : -1; // Vref>Vinで+1,違えば-1
+	// 周期更新
+	if(alg::abs(v) > 8) // 有意差がある場合のみデューティ変更
+		pwm_t::setVal( pwm_t::value() + ((v<0) ? -1 : +1) );
+
+
 #endif // LOW_SPEED_PWM
 }
 
@@ -60,7 +69,7 @@ int	main(void)
 #else
 	pwm_t::init();
 	pwm_t::setMax(64);
-	pwm_t::setVal(64);
+	pwm_t::value() = 0;
 #endif // LOW_SPEED_PWM
 
 	// コンパレータ設定
