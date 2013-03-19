@@ -43,8 +43,9 @@ void loop(void)
 #else
 	// Šî€“dˆ³‚Æ‚Ìã‰º‚ð”‰ñ”ä‚×‚Ä•½ŠŠ‰»(n‰ñ•½‹Ï). ’x‰„‚ð‚à‚½‚¹‚é–ðŠ„‚à‚ ‚è.
 	int v = 0;
-	for(int i = 0; i < 16; ++i)
+	for(int i = 0; i < 24; ++i)
 		v += a_comp::read() ? +1 : -1; // Vref>Vin‚Å+1,ˆá‚¦‚Î-1
+
 	// ŽüŠúXV
 	pwm_t::setVal( pwm_t::value() + ((v<0) ? -1 : +1) );
 
